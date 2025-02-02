@@ -82,8 +82,8 @@ module.exports = async function (fastify, opts) {
         }
     });
 
-    // 📌 **Update Order Status**
-    fastify.put('/orders/update', async (req, reply) => {
+    // 📌 **Update Order Status & Send WebSocket Notification**
+    fastify.put("/orders/update-status", async (req, reply) => {
         try {
             const { order_id, status } = req.body;
 
@@ -105,6 +105,16 @@ module.exports = async function (fastify, opts) {
             };
 
             await updateOrder();
+
+            // ✅ Send Real-Time WebSocket Update
+            if (global.wss) {
+                global.wss.clients.forEach(client => {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify({ order_id, status }));
+                    }
+                });
+            }
+
             return reply.send({ message: `✅ Order status updated to ${status}` });
 
         } catch (error) {
@@ -112,5 +122,4 @@ module.exports = async function (fastify, opts) {
             return reply.status(500).send({ message: "Database error", error });
         }
     });
-
 };

@@ -10,6 +10,25 @@ const Review = require("./models/Review");
 
 fastify.register(formbody);
 
+// 📌 **websocket**
+const WebSocket = require("ws");
+
+// ✅ Create WebSocket Server (Port 8081)
+const wss = new WebSocket.Server({ port: 5001 });
+
+wss.on("connection", (ws) => {
+    console.log("✅ New WebSocket Connection");
+    ws.send("Connected to real-time tracking server");
+
+    ws.on("message", (message) => {
+        console.log(`Received: ${message}`);
+    });
+});
+
+// ✅ Make WebSocket globally available
+global.wss = wss;
+
+
 // 📌 **Connect to MongoDB**
 mongoose.connect("mongodb://localhost:27017/arpico_online")
     .then(() => console.log("✅ MongoDB Connected"))
